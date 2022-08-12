@@ -1,0 +1,4 @@
+redis
+requests
+pandas
+smart_open[s3]

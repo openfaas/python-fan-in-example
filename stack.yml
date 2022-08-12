@@ -1,0 +1,43 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+functions:
+  create-batch:
+    lang: python3-http-debian
+    handler: ./create-batch
+    image: welteki2/create-batch:latest
+    environment:
+      redis_hostname: "redis-master.redis.svc.cluster.local"
+      redis_port: 6379
+      s3_bucket: of-demo-inception-data
+    secrets:
+      - redis-password
+      - s3-key
+      - s3-secret
+
+  run-model:
+    lang: python3-http
+    handler: ./run-model
+    image: welteki2/run-model:latest
+    environment:
+      redis_hostname: "redis-master.redis.svc.cluster.local"
+      redis_port: 6379
+      s3_bucket: of-demo-inception-data
+    secrets:
+      - redis-password
+      - s3-key
+      - s3-secret
+
+  inception:
+    image: alexellis/inception:2019-02-17
+    skip_build: true
+    fprocess: "python3 index.py"
+    environment:
+      read_timeout: "60s"
+      write_timeout: "60s"
+
+configuration:
+  templates:
+    - name: python3-flask 
+      source: https://github.com/openfaas/python-flask-template
