@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import redis
 import requests
@@ -44,7 +45,12 @@ def handle(event, context):
         headers = { 'X-Batch-Id': batchId }
         res = requests.post('http://gateway.openfaas:8080/async-function/run-model', data=col['url'], headers=headers)
 
+    response = {
+        'batch_id': batchId,
+        'batch_size': batchSize
+    }
+
     return {
         "statusCode": 201,
-        "body": "Request Accepted"
+        "body": json.dumps(response)
     }
