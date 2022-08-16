@@ -1,4 +1,5 @@
 import os
+import json
 import redis
 import requests
 import boto3
@@ -29,21 +30,25 @@ def handle(event, context):
     )
 
     batchId = event.headers.get('X-Batch-Id')
+    url = event.body.decode()
 
-    res = requests.get("http://gateway.openfaas:8080/function/inception", data=event.body)
-
-    if res.status_code != 200:
-        return {
-            "statusCode": res.status_code,
-            "body": "Failed to run model"
-        }
+    res = requests.get("http://gateway.openfaas:8080/function/inception", data=url)
 
     callId = res.headers.get('X-Call-Id')
+    status = 'success' if res.status_code == 200 else 'error'
+    result = res.json() if res.status_code == 200 else res.text
+    taskResult = {
+        'batchId': batchId,
+        'callId': callId,
+        'url': url,
+        'result': result,
+        'status': status
+    }
 
     fileName = '{}/{}.json'.format(batchId, callId)
     s3URL = "s3://{}/{}".format(bucketName, fileName)
-    with open(s3URL, 'wb', transport_params={'client': session.client('s3')}) as fout:
-        fout.write(res.content)
+    with open(s3URL, 'w', transport_params={'client': session.client('s3')}) as fout:
+        json.dump(taskResult, fout)
 
     remainingWork = r.decr(batchId)
 
