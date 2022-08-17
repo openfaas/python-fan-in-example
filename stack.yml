@@ -35,6 +35,9 @@ functions:
     image: welteki2/collect-result:latest
     environment:
       s3_bucket: of-demo-inception-data
+      read_timeout: "20s"
+      write_timeout: "20s"
+      exec_timeout: "20s"
     secrets:
       - s3-key
       - s3-secret
