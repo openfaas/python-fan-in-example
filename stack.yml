@@ -28,6 +28,16 @@ functions:
       - redis-password
       - s3-key
       - s3-secret
+  
+  collect-result:
+    lang: python3-http
+    handler: ./collect-result
+    image: welteki2/collect-result:latest
+    environment:
+      s3_bucket: of-demo-inception-data
+    secrets:
+      - s3-key
+      - s3-secret
 
   inception:
     image: alexellis/inception:2019-02-17

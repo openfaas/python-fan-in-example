@@ -53,8 +53,8 @@ def handle(event, context):
     remainingWork = r.decr(batchId)
 
     if remainingWork == 0:
-        headers = { 'X-Batch-Id': batchId, 'X-Callback-Url': 'https://requestbin.io/v51kfiv5'}
-        res = requests.post("http://gateway.openfaas:8080/async-function/env", headers=headers)
+        headers = { 'X-Batch-Id': batchId }
+        res = requests.post("http://gateway.openfaas:8080/async-function/collect-result", headers=headers)
         r.delete(batchId)
 
     return {
