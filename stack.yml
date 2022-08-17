@@ -7,10 +7,8 @@ functions:
     lang: python3-http-debian
     handler: ./create-batch
     image: welteki2/create-batch:latest
-    environment:
-      redis_hostname: "redis-master.redis.svc.cluster.local"
-      redis_port: 6379
-      s3_bucket: of-demo-inception-data
+    environment_file:
+      - env.yml
     secrets:
       - redis-password
       - s3-key
@@ -20,10 +18,8 @@ functions:
     lang: python3-http
     handler: ./run-model
     image: welteki2/run-model:latest
-    environment:
-      redis_hostname: "redis-master.redis.svc.cluster.local"
-      redis_port: 6379
-      s3_bucket: of-demo-inception-data
+    environment_file:
+      - env.yml
     secrets:
       - redis-password
       - s3-key
@@ -34,10 +30,11 @@ functions:
     handler: ./collect-result
     image: welteki2/collect-result:latest
     environment:
-      s3_bucket: of-demo-inception-data
       read_timeout: "20s"
       write_timeout: "20s"
       exec_timeout: "20s"
+    environment_file:
+      - env.yml
     secrets:
       - s3-key
       - s3-secret
