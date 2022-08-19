@@ -1,12 +1,15 @@
 # Fan-out/fan-in pattern with OpenFaaS
-This repo contains an example of how to fan out and back using OpenFaaS.
+This repo contains an example of how to fan out and back in using OpenFaaS.
+
+In the example a csv file containing image urls is used is the input for a batch job. The inception function is called for each url and categorizations are returned through machine learning. The result of each invocation is stored in an S3 bucket. When the batch is completed a final function is called that aggregates and summarizes the results. The summary is stored in the S3 bucket.
+
+![Screenshot of the queue-worker metrics, aws S3 console showing individual function results and a json file with the final results of the batch job.](https://pbs.twimg.com/media/FahM5rCVEAESamf?format=jpg&name=medium)
 
 ## How to run it?
 ### Setup dependencies
-S3 is used as a data store so will need to create an S3 bucket that the functions can use.
-You can use [amazon S3](https://aws.amazon.com/s3/), [minio](https://min.io/) or any other S3 compatible object storage.
+S3 is used as a data store. You will need to create an S3 bucket that the functions can use. This example uses a bucket named `of-demo-inception-data` replace any references to this bucket with your own bucket name.
 
-Redis is used to keep track of the work that is done on each batch.
+Redis is used to keep track of the completed work by decrementing a counter for each batch.
 You can deploy redis using `arkade`
 ```bash
 arkade install redis
@@ -18,8 +21,8 @@ Make sure the required secrets are available for the functions.
 S3 credentials:
 
 ```bash
-echo $access_key_id | faas-cli secret create s3-key
-echo $secret_access_key | faas-cli secret create s3-secret
+echo $aws_access_key_id | faas-cli secret create s3-key
+echo $aws_secret_access_key | faas-cli secret create s3-secret
 ```
 
 Redis password:
@@ -40,7 +43,7 @@ environment:
   s3_bucket: of-demo-inception-data
 ```
 
-### Deploy
+### Deploy the functions
 Deploy the stack.
 
 ```bash
@@ -52,9 +55,22 @@ faas-cli deploy
 ```
 
 ### Run with example data
-The data folder contains multiple csv files that can be used as input for a batch job. Upload them to your S3 bucket.
+The [data](./data) folder has several csv files containing urls that can be used as data source for this example.
+```
+data
+├── batch1.csv # 200 records
+├── batch2.csv # 500 records
+├── batch3.csv # 1000 records
+└── batch4.csv # 2000 records
+```
 
-Invoke the function `creat-batch` with the name of the source file you want to start processing.
+The `create-batch` function looks for the input files in the S3 bucket. Upload them to your S3 bucket.
+
+```bash
+aws s3 cp data/batch1.csv s3://of-demo-inception-data/batch1.csv
+```
+
+Invoke the function `create-batch` with the name of the source file you want to start processing.
 ```bash
 curl -i  http://127.0.0.1:8080/function/create-batch -d batch1.csv
 
