@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import redis
 import requests
 import boto3
@@ -40,9 +41,10 @@ def handle(event, context):
     taskResult = {
         'batchId': batchId,
         'callId': callId,
+        'statusCode': res.status_code,
         'url': url,
         'result': result,
-        'status': status
+        'status': status,
     }
 
     fileName = '{}/{}.json'.format(batchId, callId)
@@ -53,7 +55,10 @@ def handle(event, context):
     remainingWork = r.decr(batchId)
 
     if remainingWork == 0:
-        headers = { 'X-Batch-Id': batchId }
+        batchCompleted = time.time()
+        batchStarted = event.headers.get('X-Batch-Started')
+
+        headers = { 'X-Batch-Id': batchId, 'X-Batch-Started': batchStarted, 'X-Batch-Completed': str(batchCompleted) }
         res = requests.post("http://gateway.openfaas:8080/async-function/collect-result", headers=headers)
         r.delete(batchId)
 

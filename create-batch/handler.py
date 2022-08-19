@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import uuid
 import redis
 import requests
@@ -38,11 +39,12 @@ def handle(event, context):
 
     batchId = str(uuid.uuid4())
     batchSize = len(records)
+    batchStarted = time.time()
 
     r.set(batchId, batchSize)
 
     for index, col in records.iterrows():
-        headers = { 'X-Batch-Id': batchId }
+        headers = { 'X-Batch-Id': batchId, 'X-Batch-Started': str(batchStarted) }
         res = requests.post('http://gateway.openfaas:8080/async-function/run-model', data=col['url'], headers=headers)
 
     response = {

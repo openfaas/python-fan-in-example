@@ -19,6 +19,8 @@ def handle(event, context):
     )
 
     batchId = event.headers.get('X-Batch-Id')
+    batchStarted = event.headers.get('X-Batch-Started')
+    batchCompleted = event.headers.get('X-Batch-Completed')
 
     results = []
     failed = []
@@ -26,12 +28,14 @@ def handle(event, context):
     for key, content in s3.iter_bucket(bucketName, prefix=batchId + '/', workers=30, aws_access_key_id=s3Key, aws_secret_access_key=s3Secret):
         data = json.loads(content)
         if (data['status'] == 'error'):
-            failed.append({ 'url': data['url'], 'result': data['result'] })
+            failed.append({ 'url': data['url'], 'statusCode': data['statusCode'], 'result': data['result'] })
         else:
-            results.append({ 'url': data['url'], 'result': data['result'] })
+            results.append({ 'url': data['url'], 'statusCode': data['statusCode'] , 'result': data['result'] })
 
     summary = {
         'batchId': batchId,
+        'batchStarted': batchStarted,
+        'batchCompleted': batchCompleted,
         'failures': {
             'count': len(failed),
             'results': failed
