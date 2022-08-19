@@ -30,9 +30,9 @@ functions:
     handler: ./collect-result
     image: welteki2/collect-result:latest
     environment:
-      read_timeout: "20s"
-      write_timeout: "20s"
-      exec_timeout: "20s"
+      read_timeout: "50s"
+      write_timeout: "50s"
+      exec_timeout: "50s"
     environment_file:
       - env.yml
     secrets:
