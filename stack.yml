@@ -40,12 +40,16 @@ functions:
       - s3-secret
 
   inception:
-    image: alexellis/inception:2019-02-17
+    image: alexellis2/imagenet:0.0.10
     skip_build: true
-    fprocess: "python3 index.py"
     environment:
       read_timeout: "60s"
       write_timeout: "60s"
+    # OpenFaaS Pro annotations
+    annotations:
+      com.openfaas.health.http.path: "/health"
+      com.openfaas.health.http.initialDelay: "5s"
+      com.openfaas.health.http.periodSeconds: "2s"
 
 configuration:
   templates:
