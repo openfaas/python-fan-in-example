@@ -7,28 +7,46 @@ import boto3
 
 from smart_open import open
 
-def handle(event, context):
-    redisHostname = os.getenv('redis_hostname', default='redis-master.redis.svc.cluster.local')
-    redisPort = os.getenv('redis_port')
-    bucketName = os.getenv('s3_bucket')
-    
-    with open('/var/openfaas/secrets/redis-password', 'r') as s:
-        redisPassword = s.read()
+s3Client = None
+redisClient = None
+
+def initS3():
     with open('/var/openfaas/secrets/s3-key', 'r') as s:
         s3Key = s.read()
     with open('/var/openfaas/secrets/s3-secret', 'r') as s:
         s3Secret = s.read()
 
-    r = redis.Redis(
-        host=redisHostname,
-        port=redisPort,
-        password=redisPassword,
-    )
-
     session = boto3.Session(
         aws_access_key_id=s3Key,
         aws_secret_access_key=s3Secret,
     )
+    
+    return session.client('s3')
+
+def initRedis():
+    redisHostname = os.getenv('redis_hostname', default='redis-master.redis.svc.cluster.local')
+    redisPort = os.getenv('redis_port')
+
+    with open('/var/openfaas/secrets/redis-password', 'r') as s:
+        redisPassword = s.read()
+
+    return redis.Redis(
+        host=redisHostname,
+        port=redisPort,
+        password=redisPassword,
+    )
+    
+
+def handle(event, context):
+    global s3Client, redisClient
+
+    if s3Client == None:
+        s3Client = initS3()
+
+    if redisClient == None:
+        redisClient = initRedis()
+
+    bucketName = os.getenv('s3_bucket')
 
     batchId = event.headers.get('X-Batch-Id')
     url = event.body.decode()
@@ -49,10 +67,10 @@ def handle(event, context):
 
     fileName = '{}/{}.json'.format(batchId, callId)
     s3URL = "s3://{}/{}".format(bucketName, fileName)
-    with open(s3URL, 'w', transport_params={'client': session.client('s3')}) as fout:
+    with open(s3URL, 'w', transport_params={'client': s3Client }) as fout:
         json.dump(taskResult, fout)
 
-    remainingWork = r.decr(batchId)
+    remainingWork = redisClient.decr(batchId)
 
     if remainingWork == 0:
         batchCompleted = time.time()
@@ -60,7 +78,7 @@ def handle(event, context):
 
         headers = { 'X-Batch-Id': batchId, 'X-Batch-Started': batchStarted, 'X-Batch-Completed': str(batchCompleted) }
         res = requests.post("http://gateway.openfaas:8080/async-function/collect-result", headers=headers)
-        r.delete(batchId)
+        redisClient.delete(batchId)
 
     return {
         "statusCode": 200,
