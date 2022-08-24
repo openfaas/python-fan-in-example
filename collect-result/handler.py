@@ -22,7 +22,7 @@ def handle(event, context):
     batchStarted = event.headers.get('X-Batch-Started')
     batchCompleted = event.headers.get('X-Batch-Completed')
 
-    results = []
+    passed = []
     failed = []
     
     for key, content in s3.iter_bucket(bucketName, prefix=batchId + '/', workers=30, aws_access_key_id=s3Key, aws_secret_access_key=s3Secret):
@@ -30,24 +30,24 @@ def handle(event, context):
         if (data['status'] == 'error'):
             failed.append({ 'url': data['url'], 'statusCode': data['statusCode'], 'result': data['result'] })
         else:
-            results.append({ 'url': data['url'], 'statusCode': data['statusCode'] , 'result': data['result'] })
+            passed.append({ 'url': data['url'], 'statusCode': data['statusCode'] , 'result': data['result'] })
 
     summary = {
         'batchId': batchId,
         'batchStarted': batchStarted,
         'batchCompleted': batchCompleted,
-        'failures': {
+        'failed': {
             'count': len(failed),
             'results': failed
         },
-        'results': {
-            'count': len(results),
-            'results': results,
+        'passed': {
+            'count': len(passed),
+            'results': passed,
         }
     }
 
-    fileName = '{}.json'.format(batchId)
-    s3URL = "s3://{}/{}".format(bucketName, fileName)
+    fileName = 'output.json'
+    s3URL = "s3://{}/{}/{}".format(bucketName, batchId, fileName)
     with open(s3URL, 'w', transport_params={'client': session.client('s3')}) as fout:
         json.dump(summary, fout)
     
