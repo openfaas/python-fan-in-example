@@ -58,21 +58,21 @@ faas-cli deploy
 The [data](./data) folder has several csv files containing urls that can be used as data source for this example.
 ```
 data
-├── batch1.csv # 200 records
-├── batch2.csv # 500 records
-├── batch3.csv # 1000 records
-└── batch4.csv # 2000 records
+├── batch-200.csv # 200 records
+├── batch-500.csv # 500 records
+├── batch-1000.csv # 1000 records
+└── batch-2000.csv # 2000 records
 ```
 
 The `create-batch` function looks for the input files in the S3 bucket. Upload them to your S3 bucket.
 
 ```bash
-aws s3 cp data/batch1.csv s3://of-demo-inception-data/batch1.csv
+aws s3 cp data/batch-200.csv s3://of-demo-inception-data/data/batch-200.csv
 ```
 
 Invoke the function `create-batch` with the name of the source file you want to start processing.
 ```bash
-curl -i  http://127.0.0.1:8080/function/create-batch -d batch1.csv
+curl -i  http://127.0.0.1:8080/function/create-batch -d data/batch-200.csv
 
 HTTP/1.1 201 Created
 Content-Type: text/html; charset=utf-8
