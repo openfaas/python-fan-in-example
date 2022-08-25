@@ -6,7 +6,7 @@ functions:
   create-batch:
     lang: python3-http-debian
     handler: ./create-batch
-    image: welteki2/create-batch:latest
+    image: welteki2/create-batch:0.0.1
     environment_file:
       - env.yml
     secrets:
@@ -17,7 +17,7 @@ functions:
   run-model:
     lang: python3-http
     handler: ./run-model
-    image: welteki2/run-model:latest
+    image: welteki2/run-model:0.0.1
     environment_file:
       - env.yml
     secrets:
@@ -28,7 +28,7 @@ functions:
   collect-result:
     lang: python3-http
     handler: ./collect-result
-    image: welteki2/collect-result:latest
+    image: welteki2/collect-result:0.0.1
     environment:
       read_timeout: "50s"
       write_timeout: "50s"

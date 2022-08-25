@@ -11,6 +11,7 @@ from smart_open import open
 
 redisClient = None
 s3Client = None
+bucketName = os.getenv('s3_bucket')
 
 def initS3():
     with open('/var/openfaas/secrets/s3-key', 'r') as s:
@@ -46,8 +47,6 @@ def handle(event, context):
 
     if redisClient == None:
         redisClient = initRedis()
-    
-    bucketName = os.getenv('s3_bucket')
 
     batchFile = event.body.decode()
     s3URL = 's3://{}/{}'.format(bucketName, batchFile)
