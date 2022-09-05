@@ -1,6 +1,9 @@
 # Fan-out/fan-in pattern with OpenFaaS
 This repo contains an example of how to fan out and back in using OpenFaaS.
 
+> The complete write up for this example is published on the OpenFaaS blog:
+> - [Exploring the Fan out and Fan in pattern with OpenFaaS](https://www.openfaas.com/blog/fan-out-and-back-in-using-functions/)
+
 In the example a csv file containing image urls is used is the input for a batch job. The inception function is called for each url and categorizations are returned through machine learning. The result of each invocation is stored in an S3 bucket. When the batch is completed a final function is called that aggregates and summarizes the results. The summary is stored in the S3 bucket.
 
 ![Screenshot of the queue-worker metrics, aws S3 console showing individual function results and a json file with the final results of the batch job.](https://pbs.twimg.com/media/FahM5rCVEAESamf?format=jpg&name=medium)
