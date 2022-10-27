@@ -40,16 +40,18 @@ functions:
       - s3-secret
 
   inception:
-    image: alexellis2/imagenet:0.0.10
+    image: alexellis2/imagenet:0.0.12
     skip_build: true
     environment:
       read_timeout: "60s"
       write_timeout: "60s"
+      # Custom readiness endpoint
+      ready_path: /ready
     # OpenFaaS Pro annotations
     annotations:
-      com.openfaas.health.http.path: "/health"
-      com.openfaas.health.http.initialDelay: "5s"
-      com.openfaas.health.http.periodSeconds: "2s"
+      com.openfaas.ready.http.path: "/_/ready"
+      com.openfaas.ready.http.initialDelay: "5s"
+      com.openfaas.ready.http.periodSeconds: "2s"
 
 configuration:
   templates:
